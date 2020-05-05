@@ -1,4 +1,5 @@
 #Open and read file
-DS <- read.csv("C:/PRG/DASB/student_merged.csv",quote="\"",comment.char="")
-View(DS)
+df <- read.csv("student_merged.csv", stringsAsFactors = FALSE)
+View(df)
+
 
