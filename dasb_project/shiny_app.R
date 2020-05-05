@@ -15,12 +15,8 @@ ui <- fluidPage(
       
       sliderInput("ageInput", "Age", min = 15, max = 22,
                              value = c(18, 20)),
-      radioButtons("subjectInput", "School subject",
-                   choices = c("MS", "GP", "Both"),
-                   selected = "MS"),
-      radioButtons("genderInput", "Country",
-                  choices = c("M", "F", "Both"),
-                  selected = "F"),
+      uiOutput("subjectOutput"),
+      uiOutput("genderOutput")
     ),
   
     mainPanel(
@@ -36,27 +32,44 @@ ui <- fluidPage(
 
 
 server <- function(input, output) {
-  output$coolplot <- renderPlot({
-    filtered <-
-      df %>%
+  output$genderOutput <- renderUI({
+    radioButtons("genderInput", "Gender",
+                sort(unique(df$sex)),
+                selected = "F")
+  })
+  
+  output$subjectOutput <- renderUI({
+    radioButtons("subjectInput", "Subject",
+                 sort(unique(df$school)),
+                 selected = "MS")
+  })  
+  
+  filtered <- reactive({
+    
+    if (is.null(input$subjectInput)) {
+      return(NULL)
+    }   
+    
+    df %>%
       filter(age >= input$ageInput[1],
              age <= input$ageInput[2],
              school == input$subjectInput,
              sex == input$genderInput
       )
-    ggplot(filtered, aes(failures)) +
+  })
+  
+  output$coolplot <- renderPlot({
+    
+    if (is.null(filtered())) {
+      return()
+    }
+    
+    ggplot(filtered(), aes(failures)) +
       geom_histogram()
   })
   
   output$results <- renderTable({
-    filtered <-
-      df %>%
-      filter(age >= input$ageInput[1],
-             age <= input$ageInput[2],
-             school == input$subjectInput,
-             sex == input$genderInput
-      )
-    filtered
+    filtered()
   })
   
 }
