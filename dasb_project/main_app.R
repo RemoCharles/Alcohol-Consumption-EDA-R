@@ -1,11 +1,20 @@
 library()
 
 #Open and read file
-df <- read.csv("student_merged.csv", stringsAsFactors = FALSE)
+df_raw <- read.csv("student_merged.csv", stringsAsFactors = FALSE)
+
+df<-df_raw%>% distinct(school,sex,age,address,famsize,Pstatus,
+                  Medu,Fedu,Mjob,Fjob,reason,
+                  guardian,traveltime,studytime,failures,
+                  schoolsup, famsup,activities,nursery,higher,internet,
+                  romantic,famrel,freetime,goout,Dalc,Walc,health,absences, .keep_all = TRUE)
 View(df)
 
 #Filtering Data to only numeric Data
-##dfnum <- Filter(is.numeric, df)
+dfnum <- Filter(is.numeric, df)
+summary(dfnum)
+df.pca <- prcomp(dfnum[,c(1:14)],center = TRUE, scale. = TRUE)
+summary(df.pca)
 
 #factorizing all Data categorical data
 df_factorized <- df
@@ -39,22 +48,28 @@ summary(df_factorized)
 df_clean = subset(df_factorized, select = -c(G2,G3,Mjob,Fjob,guardian,reason))
 
 #Correlation Matrix Results: shows strong Correlation between all Grades (cut them or average them)
-df_cor <- cor(round(df_clean,2))
+cormat <- cor(round(df_clean,2))
 corrplot(df_cor, method = "number")
 
 
 
 
+
 #Try and find other correlations (Reshape Correlation to show highest correlations first)
-melted_cormat <- melt(df_cor)
+melted_cormat <- melt(cormat)
 head(melted_cormat)
 
+# Get lower triangle of the correlation matrix
+get_lower_tri<-function(cormat){
+  cormat[upper.tri(cormat)] <- NA
+  return(cormat)
+}
 # Get upper triangle of the correlation matrix
 get_upper_tri <- function(cormat){
   cormat[lower.tri(cormat)]<- NA
   return(cormat)
 }
-
+# Melt the correlation matrix
 melted_cormat <- melt(upper_tri, na.rm = TRUE)
 # Heatmap
 ggplot(data = melted_cormat, aes(Var2, Var1, fill = value))+
@@ -67,16 +82,16 @@ ggplot(data = melted_cormat, aes(Var2, Var1, fill = value))+
                                    size = 12, hjust = 1))+
   coord_fixed()
 
-reorder_cormat <- function(df_cor){
+reorder_cormat <- function(cormat){
   # Use correlation between variables as distance
-  dd <- as.dist((1-df_cor)/2)
+  dd <- as.dist((1-cormat)/2)
   hc <- hclust(dd)
-  df_cor <-df_cor[hc$order, hc$order]
+  cormat <-cormat[hc$order, hc$order]
 }
 
 # Reorder the correlation matrix
-df_cor <- reorder_cormat(df_cor)
-upper_tri <- get_upper_tri(df_cor)
+cormat <- reorder_cormat(cormat)
+upper_tri <- get_upper_tri(cormat)
 # Melt the correlation matrix
 melted_cormat <- melt(upper_tri, na.rm = TRUE)
 # Create a ggheatmap
@@ -93,20 +108,33 @@ ggheatmap <- ggplot(melted_cormat, aes(Var2, Var1, fill = value))+
 print(ggheatmap)
 
 
-PCA
 
-df.pca <- prcomp(c1:7,)
-summary(mtcars.pca)
 
-#
+#PCA
+
+df.pca <- prcomp(df_clean[,c(1:27)],center = TRUE, scale. = TRUE)
+summary(df.pca)
+
+#PCA shows we don't have many variables that correlate or explain the rest of the variables
+
+
+#Data Exploration finding Correlations
+ggplot(aes(x=failures,y=Dalc),data=df)+
+  geom_point()
+
+ggplot(aes(x=Dalc,y=G1, group=Dalc),data=df)+
+  geom_boxplot()
+
 
 plot(famrel ~ absences,data=df )
 
 res <- cor(df)
 round(res, 2)
 
-#
-correlat
+#Create Model, What Variables should we use?
+
+Model <- lm(y ~ X, data = d)
+
 
 
 #
