@@ -15,6 +15,9 @@ dfnum <- Filter(is.numeric, df)
 summary(dfnum)
 df.pca <- prcomp(dfnum[,c(1:14)],center = TRUE, scale. = TRUE)
 summary(df.pca)
+dfnum_cor <- cor(dfnum[1:13], dfnum$G1)
+
+dfnum_withoutgrades <-(dfnum[,c(1:14)])
 
 #factorizing all Data categorical data
 df_factorized <- df
@@ -131,9 +134,20 @@ plot(famrel ~ absences,data=df )
 res <- cor(df)
 round(res, 2)
 
-#Create Model, What Variables should we use?
+#Create Model, What Variables should we use? (Prediction made on numerical df dfnum (14 variables ))
+mini_lm_model1 <- lm(G1 ~ studytime+higher+famsize, data = dfnum_withoutgrades)
+summary(mini_lm_model1)
 
-Model <- lm(y ~ X, data = d)
+lm2 <- lm(G1 ~ .-famrel-freetime, data = dfnum_withoutgrades)
+summary(lm2)
+
+lm3 <- lm(G1 ~ age+Medu+studytime+failures, data = dfnum_withoutgrades)
+summary(lm3)
+
+lm4 <- lm(G1 ~ ., data = dfnum_withoutgrades)
+summary(lm4)
+        
+anova(mini_lm_model1,lm2, lm3, lm4)
 
 
 
