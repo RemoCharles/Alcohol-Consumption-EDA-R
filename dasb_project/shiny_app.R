@@ -1,4 +1,5 @@
 # shinyapp template
+library(DT)
 library(shiny)
 library(shinythemes)
 library(ggplot2)
@@ -6,7 +7,7 @@ library(dplyr)
 df <- read.csv("student_merged.csv", stringsAsFactors = FALSE)
 
 
-ui <- fluidPage(theme = shinytheme("superhero"),
+ui <- fluidPage(theme = shinytheme("flatly"),
   titlePanel("Student Alcohol Consumption"),
     navbarPage("Let's get started",
                
@@ -14,7 +15,7 @@ ui <- fluidPage(theme = shinytheme("superhero"),
                         uiOutput("pdfview")
                ),
              
-               tabPanel("Information about the Data", ""
+               tabPanel("Information about the Data", "Tbd"
                         ),
                
                tabPanel("Exploratory Data Analysis",
@@ -30,7 +31,7 @@ ui <- fluidPage(theme = shinytheme("superhero"),
                           mainPanel(
                             tabsetPanel(
                               tabPanel("Plot", plotOutput("coolplot")),
-                              tabPanel("Table", tableOutput("results"))
+                              tabPanel("Table", dataTableOutput("results"))
                               )
                             )
                           )
@@ -51,13 +52,13 @@ server <- function(input, output) {
   
   
   output$genderOutput <- renderUI({
-    radioButtons("genderInput", "Gender",
+    checkboxGroupInput("genderInput", "Gender",
                 sort(unique(df$sex)),
                 selected = "F")
   })
   
   output$subjectOutput <- renderUI({
-    radioButtons("subjectInput", "Subject",
+    checkboxGroupInput("subjectInput", "Subject",
                  sort(unique(df$school)),
                  selected = "MS")
   })  
@@ -71,8 +72,8 @@ server <- function(input, output) {
     df %>%
       filter(age >= input$ageInput[1],
              age <= input$ageInput[2],
-             school == input$subjectInput,
-             sex == input$genderInput
+             school %in% input$subjectInput,
+             sex %in% input$genderInput
       )
   })
   
@@ -86,7 +87,7 @@ server <- function(input, output) {
       geom_histogram()
   })
   
-  output$results <- renderTable({
+  output$results <- renderDataTable({
     filtered()
   })
   
