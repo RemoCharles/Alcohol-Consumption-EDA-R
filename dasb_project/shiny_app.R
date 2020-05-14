@@ -1,37 +1,55 @@
 # shinyapp template
 library(shiny)
+library(shinythemes)
 library(ggplot2)
 library(dplyr)
 df <- read.csv("student_merged.csv", stringsAsFactors = FALSE)
 
 
-ui <- fluidPage(
+ui <- fluidPage(theme = shinytheme("superhero"),
   titlePanel("Student Alcohol Consumption"),
-  
-  sidebarLayout(
-    sidebarPanel(
-      
-      titlePanel("Exploratory Data Analysis"),
-      
-      sliderInput("ageInput", "Age", min = 15, max = 22,
+    navbarPage("Let's get started",
+               
+               tabPanel("Project proposal",
+                        uiOutput("pdfview")
+               ),
+             
+               tabPanel("Information about the Data", ""
+                        ),
+               
+               tabPanel("Exploratory Data Analysis",
+                        sidebarLayout(
+                          sidebarPanel(
+                            titlePanel("Exploratory Data Analysis"),
+                            sliderInput("ageInput", "Age", min = 15, max = 22,
                              value = c(18, 20)),
-      uiOutput("subjectOutput"),
-      uiOutput("genderOutput")
-    ),
-  
-    mainPanel(
-      plotOutput("coolplot"),
-      br(), br(),
-      tableOutput("results")
-      
-    )
+                            uiOutput("subjectOutput"),
+                            uiOutput("genderOutput")
+                            ),
+                          
+                          mainPanel(
+                            tabsetPanel(
+                              tabPanel("Plot", plotOutput("coolplot")),
+                              tabPanel("Table", tableOutput("results"))
+                              )
+                            )
+                          )
+                        ),
+               tabPanel("Prediciton"
+                        )
+               ),
   )
-)
-
 
 
 
 server <- function(input, output) {
+  
+  #PDF output of the project proposal. Shiny app has to be opened in Browser and NOT in Rstudio!!!!
+  output$pdfview <- renderUI({
+    tags$iframe(style="height:1500px; width:100%", src="Project_proposal.pdf")
+  })
+  
+  
   output$genderOutput <- renderUI({
     radioButtons("genderInput", "Gender",
                 sort(unique(df$sex)),
