@@ -94,3 +94,7 @@ server <- function(input, output) {
 }
 
 shinyApp(ui = ui, server = server)
+
+#Loading the whole main_app.R script
+#Need to find out how to load specific funtions
+#source("main_app.R")
