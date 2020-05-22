@@ -6,6 +6,13 @@ library(ggplot2)
 library(dplyr)
 df <- read.csv("student_merged.csv", stringsAsFactors = FALSE)
 
+#Code for Data Preapration (for correlation or Prediciton Model)
+df$Dalc <- as.factor(df$Dalc)
+df$Walc <- as.factor(df$Walc)
+df$failures <- as.factor(df$failures)
+
+
+#Code for Shiny UI
 
 ui <- fluidPage(theme = shinytheme("flatly"),
   titlePanel("Student Alcohol Consumption"),
@@ -46,17 +53,21 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                                                selected = c(1,2,3,4,5)
                             )
                             ),
-                
+                       
                           mainPanel(
                             tabsetPanel(
-                              tabPanel("Grades",
+                              tabPanel("Grades", h2("Grades of Students with regards to gender and subject"),
                                        plotOutput("Grade3Plot"),
                                        plotOutput("Grade2Plot"),
                                        plotOutput("Grade1Plot")
                                        
                                        ),
-                              tabPanel("Failuers", plotOutput("failurePlot")),
-                              tabPanel("Correlations", plotOutput("correlationPlot")),
+                              tabPanel("Failuers", h2("Percentage of Students who failed at exams with regards to school subject and gender"),
+                                       plotOutput("failurePlot")),
+                              tabPanel("Alcohol Consumption", h2("Impact of Alcohol on the final grade of Students"),
+                                       plotOutput("DalcPlot"),
+                                       plotOutput("WalcPlot"),
+                              ),
                               tabPanel("Table", dataTableOutput("results"))
                               )
                             )
@@ -68,7 +79,7 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                ),
   )
 
-
+#Code for Shiny Server
 
 server <- function(input, output) {
   
@@ -111,7 +122,6 @@ server <- function(input, output) {
       geom_bar(aes(x=failures, y = ..prop.., stat="count", fill=school, group=school), position="dodge") +
       geom_text(aes(x=failures, label = scales::percent(..prop..),
                      y= ..prop.., group=school ), stat= "count", position = position_dodge(width = 1), vjust = -.5) +
-      ggtitle("Percentage of Students who failed at exams with regards to school subject and gender") +
       labs(y="Percent", x="Number of failed Exams") +
       facet_grid(~ sex)+
       scale_y_continuous(labels=scales::percent)
@@ -126,7 +136,6 @@ server <- function(input, output) {
     
     ggplot(filtered(), aes(G3, color=school, fill=school)) +
       geom_bar(aes(y = ..prop.., stat="count"), position="dodge") +
-      ggtitle("Grades of Students with regards to gender subjects") +
       scale_y_continuous(labels=scales::percent) +
       labs(y="Percent", x="Final grade") +
       facet_grid(~ sex)
@@ -159,14 +168,32 @@ server <- function(input, output) {
       facet_grid(~ sex)
   })
   
-  output$correlationPlot <- renderPlot({
+  output$DalcPlot <- renderPlot({
     
     if (is.null(filtered())) {
       return()
     }
     
-    ggplot(filtered(), aes(G1, color=sex, fill=sex)) +
-      geom_histogram(position='dodge', stat='count')
+    ggplot(filtered(), aes(Dalc, G3)) +
+      geom_boxplot() +
+      labs(y="Final Grade", x="Alcohol Consumption during Workdays") +
+      facet_grid(~ sex)
+      
+    
+  })
+  
+  output$WalcPlot <- renderPlot({
+    
+    if (is.null(filtered())) {
+      return()
+    }
+    
+    ggplot(filtered(), aes(Walc, G3)) +
+      geom_boxplot() +
+      labs(y="Final Grade", x="Alcohol Consumption during Weekend") +
+      facet_grid(~ sex)
+    
+    
   })
   
   output$results <- renderDataTable({
