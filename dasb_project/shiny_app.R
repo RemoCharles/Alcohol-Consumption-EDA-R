@@ -9,7 +9,7 @@ df <- read.csv("student_merged.csv", stringsAsFactors = FALSE)
 
 ui <- fluidPage(theme = shinytheme("flatly"),
   titlePanel("Student Alcohol Consumption"),
-    navbarPage("Let's get started",
+    navbarPage("DASB Project - Group 3",
                
                tabPanel("Project proposal",
                         uiOutput("pdfview")
@@ -49,12 +49,14 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                 
                           mainPanel(
                             tabsetPanel(
-                              tabPanel("Failuers", plotOutput("failurePlot")),
                               tabPanel("Grades",
-                                       plotOutput("Grade1Plot"),
+                                       plotOutput("Grade3Plot"),
                                        plotOutput("Grade2Plot"),
-                                       plotOutput("Grade3Plot")
+                                       plotOutput("Grade1Plot")
+                                       
                                        ),
+                              tabPanel("Failuers", plotOutput("failurePlot")),
+                              tabPanel("Correlations", plotOutput("correlationPlot")),
                               tabPanel("Table", dataTableOutput("results"))
                               )
                             )
@@ -105,18 +107,29 @@ server <- function(input, output) {
       return()
     }
     
-    ggplot(filtered(), aes(failures)) +
-      geom_histogram()
+    ggplot(filtered()) +
+      geom_bar(aes(x=failures, y = ..prop.., stat="count", fill=school, group=school), position="dodge") +
+      geom_text(aes(x=failures, label = scales::percent(..prop..),
+                     y= ..prop.., group=school ), stat= "count", position = position_dodge(width = 1), vjust = -.5) +
+      ggtitle("Percentage of Students who failed at exams with regards to school subject and gender") +
+      labs(y="Percent", x="Number of failed Exams") +
+      facet_grid(~ sex)+
+      scale_y_continuous(labels=scales::percent)
   })
   
-  output$Grade1Plot <- renderPlot({
+
+  output$Grade3Plot <- renderPlot({
     
     if (is.null(filtered())) {
       return()
     }
     
-    ggplot(filtered(), aes(G3)) +
-      geom_histogram()
+    ggplot(filtered(), aes(G3, color=school, fill=school)) +
+      geom_bar(aes(y = ..prop.., stat="count"), position="dodge") +
+      ggtitle("Grades of Students with regards to gender subjects") +
+      scale_y_continuous(labels=scales::percent) +
+      labs(y="Percent", x="Final grade") +
+      facet_grid(~ sex)
   })
   
   output$Grade2Plot <- renderPlot({
@@ -125,20 +138,36 @@ server <- function(input, output) {
       return()
     }
     
-    ggplot(filtered(), aes(G2)) +
-      geom_histogram()
+    ggplot(filtered(), aes(G2, color=school, fill=school)) +
+      geom_bar(aes(y = ..prop.., stat="count"), position="dodge") +
+
+      scale_y_continuous(labels=scales::percent) +
+      labs(y="Percent", x="Second period grade") +
+      facet_grid(~ sex)
   })
   
-  output$Grade3Plot <- renderPlot({
+  output$Grade1Plot <- renderPlot({
     
     if (is.null(filtered())) {
       return()
     }
     
-    ggplot(filtered(), aes(G1)) +
-      geom_histogram()
+    ggplot(filtered(), aes(G1, color=school, fill=school)) +
+      geom_bar(aes(y = ..prop.., stat="count"), position="dodge") +
+      scale_y_continuous(labels=scales::percent) +
+      labs(y="Percent", x="First period grade") +
+      facet_grid(~ sex)
   })
   
+  output$correlationPlot <- renderPlot({
+    
+    if (is.null(filtered())) {
+      return()
+    }
+    
+    ggplot(filtered(), aes(G1, color=sex, fill=sex)) +
+      geom_histogram(position='dodge', stat='count')
+  })
   
   output$results <- renderDataTable({
     filtered()
