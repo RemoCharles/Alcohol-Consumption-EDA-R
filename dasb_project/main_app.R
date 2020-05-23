@@ -1,61 +1,116 @@
 library()
+library(knitr)
+library(pander)
+library(plotly)
+library(plyr)
+library(magrittr)
+library(readr)
+library(rpart)
+library(DMwR)
+library(dplyr)
+library(corrplot)
+library(randomForest)
+library(ggplot2)
+library(reshape2)
+library(corrgram)
+
+#-----------------------------------------------------------------------------------------------------------------------------------
+#EXPLORE DATASET
 
 #Open and read file
 df_raw <- read.csv("student_merged.csv", stringsAsFactors = FALSE)
 
-df<-df_raw%>% distinct(school,sex,age,address,famsize,Pstatus,
+df<-df_raw %>% distinct(school,sex,age,address,famsize,Pstatus,
                   Medu,Fedu,Mjob,Fjob,reason,
                   guardian,traveltime,studytime,failures,
                   schoolsup, famsup,activities,nursery,higher,internet,
                   romantic,famrel,freetime,goout,Dalc,Walc,health,absences, .keep_all = TRUE)
 View(df)
+str(df)
+
+#-----------------------------------------------------------------------------------------------------------------------------------
+#DATA Cleansing
+
+#Since our GGplot later shows that all Grades have a big correlation with eachtother, we create an avg Grade = Gavg
+df$Gavg<-(df$G1+df$G2+df$G3)/3 
+
+student_df = subset(df, select = -c(G1,G2,G3))
+str(student_df)
+View(student_df)
+
+#TO DO: Manipulate Data so max and min values are set
+
 
 #Filtering Data to only numeric Data
-dfnum <- Filter(is.numeric, df)
-summary(dfnum)
-df.pca <- prcomp(dfnum[,c(1:14)],center = TRUE, scale. = TRUE)
-summary(df.pca)
-dfnum_cor <- cor(dfnum[1:13], dfnum$G1)
-
-dfnum_withoutgrades <-(dfnum[,c(1:14)])
+# dfnum <- Filter(is.numeric, student_df)
+# summary(dfnum)
+# student_df.pca <- prcomp(dfnum[,c(1:14)],center = TRUE, scale. = TRUE)
+# summary(student_df.pca)
+# dfnum_cor <- cor(dfnum[1:13], dfnum$G1)
+# 
+# dfnum_withoutgrades <-(dfnum[,c(1:14)])
 
 #factorizing all Data categorical data
-df_factorized <- df
 
-df_factorized$class<-as.numeric(factor(df_factorized$class,labels=c(-1,1)))
-df_factorized$famsize<-as.numeric(factor(df_factorized$famsize,labels=c(4,3)))
-df_factorized$Pstatus<-as.numeric(factor(df_factorized$Pstatus,labels=c(-1,1)))
-df_factorized$address<-as.numeric(factor(df_factorized$address,labels=c(-1,1)))
-df_factorized$sex<-as.numeric(factor(df_factorized$sex,labels=c(-1,1)))
-df_factorized$school<-as.numeric(factor(df_factorized$school,labels=c(2,1)))
-df_factorized$schoolsup<-as.numeric(factor(df_factorized$schoolsup, labels=c(0,1)))
-df_factorized$famsup<-as.numeric(factor(df_factorized$famsup, labels=c(0,1)))
-df_factorized$paid<-as.numeric(factor(df_factorized$paid, labels=c(0,1)))
-df_factorized$activities<-as.numeric(factor(df_factorized$activities, labels=c(0,1)))
-df_factorized$nursery<-as.numeric(factor(df_factorized$nursery, labels=c(0,1)))
-df_factorized$higher<-as.numeric(factor(df_factorized$higher, labels=c(0,1)))
-df_factorized$internet<-as.numeric(factor(df_factorized$internet, labels=c(0,1)))
-df_factorized$romantic<-as.numeric(factor(df_factorized$romantic, labels=c(0,1)))
+
+
+
+
+df_factorized <- student_df
+
+
+df_factorized$class<-as.numeric(factor(df_factorized$class))
+df_factorized$famsize<-as.numeric(factor(df_factorized$famsize))
+df_factorized$Pstatus<-as.numeric(factor(df_factorized$Pstatus))
+df_factorized$address<-as.numeric(factor(df_factorized$address))
+df_factorized$sex<-as.numeric(factor(df_factorized$sex))
+df_factorized$school<-as.numeric(factor(df_factorized$school))
+df_factorized$schoolsup<-as.numeric(factor(df_factorized$schoolsup))
+df_factorized$famsup<-as.numeric(factor(df_factorized$famsup))
+df_factorized$paid<-as.numeric(factor(df_factorized$paid))
+df_factorized$activities<-as.numeric(factor(df_factorized$activities))
+df_factorized$nursery<-as.numeric(factor(df_factorized$nursery))
+df_factorized$higher<-as.numeric(factor(df_factorized$higher))
+df_factorized$internet<-as.numeric(factor(df_factorized$internet))
+df_factorized$romantic<-as.numeric(factor(df_factorized$romantic))
 df_factorized$guardian<-as.numeric(factor(df_factorized$guardian))
 df_factorized$Mjob<-as.numeric(factor(df_factorized$Mjob))
 df_factorized$Fjob<-as.numeric(factor(df_factorized$Fjob))
 df_factorized$reason<-as.numeric(factor(df_factorized$reason))
-df_factorized$Gintv<-as.numeric(factor(df_factorized$Gintv))
-df_factorized$class<-as.numeric(factor(df_factorized$class, labels=c(-1,1)))
-
-summary(df_factorized)
 
 
+#as factor for the categorical Data
 
-#Cut the categorical values 
-df_clean = subset(df_factorized, select = -c(G2,G3,Mjob,Fjob,guardian,reason))
+df_factorized$Mjob <- as.factor(df$Mjob)
+df_factorized$Fjob <- as.factor(df$Fjob)
+df_factorized$guardian <- as.factor(df$guardian)
+df_factorized$reason <- as.factor(df$reason)
+
+
+#possibly use factor (statt numerisch)
+
+
+str(df_factorized)
+
+
+#Put them in Matrix Model to factorize(or just factorize by hand)
+df_factorized_matrix <- data.frame(model.matrix( ~ .- 1, data=df_factorized)) 
+
+str(df_factorized_matrix)
+
+#TO DELETE:Cut the categorical values 
+#df_clean = subset(df, select = -c(Mjob,Fjob,guardian,reason))
+
+
+
+#-----------------------------------------------------------------------------------------------------------------------------------
+#Visualize Correlations
+#Cut categorical values
+df_clean = subset(df, select = -c(Mjob,Fjob,guardian,reason))
 
 #Correlation Matrix Results: shows strong Correlation between all Grades (cut them or average them)
-cormat <- cor(round(df_clean,2))
+cormat <- cor(round(df_factorized,2))
 corrplot(df_cor, method = "number")
-
-
-
 
 
 #Try and find other correlations (Reshape Correlation to show highest correlations first)
@@ -114,27 +169,29 @@ print(ggheatmap)
 
 
 #PCA
+student_df.pca <- prcomp(df_factorized,center = TRUE, scale. = TRUE)
 
-df.pca <- prcomp(df_clean[,c(1:27)],center = TRUE, scale. = TRUE)
-summary(df.pca)
+
+#student_df.pca <- prcomp(df_clean[,c(1:27)],center = TRUE, scale. = TRUE)
+summary(student_df.pca)
 
 #PCA shows we don't have many variables that correlate or explain the rest of the variables
 
 
 #Data Exploration finding Correlations
-ggplot(aes(x=failures,y=Dalc),data=df)+
+ggplot(aes(x=failures,y=Dalc),data=student_df)+
   geom_point()
 
-ggplot(aes(x=Dalc,y=G1, group=Dalc),data=df)+
+ggplot(aes(x=Dalc,y=G1, group=Dalc),data=student_df)+
   geom_boxplot()
 
 
-plot(famrel ~ absences,data=df )
+plot(famrel ~ absences,data=student_df )
 
-res <- cor(df)
+res <- cor(student_df)
 round(res, 2)
 
-#Create Model, What Variables should we use? (Prediction made on numerical df dfnum (14 variables ))
+#Create Model, What Variables should we use? (Prediction made on numerical student_df dfnum (14 variables ))
 mini_lm_model1 <- lm(G1 ~ studytime+higher+famsize, data = dfnum_withoutgrades)
 summary(mini_lm_model1)
 
