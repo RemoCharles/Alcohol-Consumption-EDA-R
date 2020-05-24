@@ -88,28 +88,47 @@ df_factorized$reason <- as.factor(df$reason)
 
 
 #possibly use factor (statt numerisch)
-
-
 str(df_factorized)
 
 
 #Put them in Matrix Model to factorize(or just factorize by hand)
-df_factorized_matrix <- data.frame(model.matrix( ~ .- 1, data=df_factorized)) 
+df_factorized_matrix <- data.frame(model.matrix( ~ .- 1, data=student_df)) 
 
 str(df_factorized_matrix)
 
 #TO DELETE:Cut the categorical values 
-#df_clean = subset(df, select = -c(Mjob,Fjob,guardian,reason))
+df_numeric = subset(df_factorized, select = -c(Mjob,Fjob,guardian,reason))
+View(data_numeric)
 
+#-----------------------------------------------------------------------------------------------------------------------------------
+#Create Training and Test Set
+set.seed(99)
+train.data <- sample_frac(df_factorized_matrix, 0.7) # select 70% random samples
+test.data <- setdiff(df_factorized_matrix,train.data)
+
+#create train and test set with numerical values
+train.data_numeric <- sample_frac(df_numeric, 0.7) # select 70% random samples
+test.data_numeric <- setdiff(df_numeric,train.data_numeric)
 
 
 #-----------------------------------------------------------------------------------------------------------------------------------
 #Visualize Correlations
-#Cut categorical values
-df_clean = subset(df, select = -c(Mjob,Fjob,guardian,reason))
+
+#Data Exploration finding Correlations
+ggplot(aes(x=failures,y=Dalc),data=student_df)+
+  geom_point()
+
+ggplot(aes(x=Dalc,y=G1, group=Dalc),data=student_df)+
+  geom_boxplot()
+
+
+plot(famrel ~ absences,data=student_df )
+
+res <- cor(student_df)
+round(res, 2)
 
 #Correlation Matrix Results: shows strong Correlation between all Grades (cut them or average them)
-cormat <- cor(round(df_factorized,2))
+cormat <- cor(round(df_numeric,2))
 corrplot(df_cor, method = "number")
 
 
@@ -166,46 +185,89 @@ ggheatmap <- ggplot(melted_cormat, aes(Var2, Var1, fill = value))+
 print(ggheatmap)
 
 
+#Try and find Variables to best predict Grading Average (Gavg) based on correlation 
 
 
 #PCA
-student_df.pca <- prcomp(df_factorized,center = TRUE, scale. = TRUE)
 
 
+cor_df <- cor(df_factorized_matrix, df_factorized_matrix, method = "pearson")
+student_cor_df<- data.frame(cor=cor_df[1:40,41], varn = names(cor_df[1:40,41])) 
+student_cor_df<- student_cor_df%>%mutate(cor_abs = abs(cor)) %>% arrange(desc(cor_abs))
+plot(student_cor_df$cor_abs, type="l")
+
+#Filter out Values with under 15% Correlation
+list_var_names <- student_cor_df %>% filter(cor_abs>0.15)
+filter_df <- data.frame(df_factorized_matrix) %>% select(Gavg,one_of(as.character(list_var_names$varn)))
+summary(filter_df)
+
+y <- filter_df %>% select(-Gavg)
+pca = prcomp(y, scale. = T, center = T)
+plot(pca, type="l")
+summary(pca)
+
+pca_df <- data.frame(pca$x)
+pca_df <- pca_df %>% select(-PC7,-PC8) 
+pca_df$Gavg = filter_df$Gavg
+pca_model <- lm(data = pca_df, Gavg ~ .)
+summary(pca_model)
+
+
+#student_df.pca <- prcomp(df_factorized,center = TRUE, scale. = TRUE)
 #student_df.pca <- prcomp(df_clean[,c(1:27)],center = TRUE, scale. = TRUE)
-summary(student_df.pca)
+#summary(student_df.pca)
 
 #PCA shows we don't have many variables that correlate or explain the rest of the variables
+ 
 
 
-#Data Exploration finding Correlations
-ggplot(aes(x=failures,y=Dalc),data=student_df)+
-  geom_point()
-
-ggplot(aes(x=Dalc,y=G1, group=Dalc),data=student_df)+
-  geom_boxplot()
-
-
-plot(famrel ~ absences,data=student_df )
-
-res <- cor(student_df)
-round(res, 2)
 
 #Create Model, What Variables should we use? (Prediction made on numerical student_df dfnum (14 variables ))
-mini_lm_model1 <- lm(G1 ~ studytime+higher+famsize, data = dfnum_withoutgrades)
-summary(mini_lm_model1)
 
-lm2 <- lm(G1 ~ .-famrel-freetime, data = dfnum_withoutgrades)
-summary(lm2)
-
-lm3 <- lm(G1 ~ age+Medu+studytime+failures, data = dfnum_withoutgrades)
+lm1 <- lm(Gavg ~ failures, data = df_factorized_matrix)
 summary(lm3)
 
-lm4 <- lm(G1 ~ ., data = dfnum_withoutgrades)
+lm2 <- lm(Gavg ~ failures+higheryes, data = df_factorized_matrix)
 summary(lm4)
-        
-anova(mini_lm_model1,lm2, lm3, lm4)
+
+lm3 <- lm(Gavg ~ failures+higheryes+Medu+studytime, data = df_factorized_matrix)
+summary(lm5)
+
+lm4 <- lm(Gavg ~ failures+higheryes+Medu+studytime+Fedu+schoolGP+schoolMS, data = df_factorized_matrix)
+summary(lm4)
+
+lm5 <- lm(Gavg ~ failures+higheryes+schoolGP+schoolMS+Medu+studytime+Fedu+Dalc, data = df_factorized_matrix)
+summary(lm5)
+
+lm6 <- lm(Gavg ~ .,data = df_factorized_matrix)
+summary(lm6)
+
+anova(lm1,lm2, lm3, lm4,lm5, pca_model)
 
 
+#Move on with model 5 because lowest RSS
+coef(lm5)
 
-#
+#predict new Value --> shiny: let used pasted parameter values of newdata
+predLinear <- predict(lm5, newdata = data.frame(age=24, cholesterol=1, gluc=1, bmi=24, ap_hi=120))
+backtransform <- function(x) (exp(x)/(exp(x)+1))
+pred <- backtransform(predLinear)
+
+#pred is the change of having a CVD
+pred*100
+
+#make accuracy test
+fitted.results <- predict(lm5, newdata=subset(test.data_numeric, select=c(age, cholesterol, gluc, bmi, ap_hi)))
+
+backtransform <- function(x) (exp(x)/(exp(x)+1))
+pred <- backtransform(fitted.results)
+pred <- round(pred, 0)
+
+misClasificError <- mean(pred != test.data_numeric$cardio)
+print(paste("Accuracy", 1-misClasificError))
+
+library(SDMTools)
+acc <- accuracy(test.data_numeric$cardio, pred, threshold=0.5)
+print(paste("Accuracy with SDM ", acc$AUC))
+
+
