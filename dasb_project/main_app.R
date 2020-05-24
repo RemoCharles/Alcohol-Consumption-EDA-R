@@ -249,25 +249,26 @@ anova(lm1,lm2, lm3, lm4,lm5, pca_model)
 coef(lm5)
 
 #predict new Value --> shiny: let used pasted parameter values of newdata
-predLinear <- predict(lm5, newdata = data.frame(age=24, cholesterol=1, gluc=1, bmi=24, ap_hi=120))
+summary(df_factorized_matrix)
+
+predLinear <- predict(lm5, newdata = data.frame(failures=1 ,higheryes =1 , schoolGP=1 ,schoolMS=0 ,Medu=3 ,studytime=1 ,
+                                                Fedu=2 ,Dalc=2 ))
 backtransform <- function(x) (exp(x)/(exp(x)+1))
 pred <- backtransform(predLinear)
 
-#pred is the change of having a CVD
-pred*100
-
 #make accuracy test
-fitted.results <- predict(lm5, newdata=subset(test.data_numeric, select=c(age, cholesterol, gluc, bmi, ap_hi)))
+fitted.results <- predict(lm5, newdata=subset(test.data, select=c(failures,higheryes,schoolGP,schoolMS,
+                                                                  Medu,studytime,Fedu,Dalc)))
 
 backtransform <- function(x) (exp(x)/(exp(x)+1))
 pred <- backtransform(fitted.results)
 pred <- round(pred, 0)
 
-misClasificError <- mean(pred != test.data_numeric$cardio)
+misClasificError <- mean(pred != test.data$Gavg)
 print(paste("Accuracy", 1-misClasificError))
 
 library(SDMTools)
-acc <- accuracy(test.data_numeric$cardio, pred, threshold=0.5)
+acc <- accuracy(test.data$Gavg, pred, threshold=0.5)
 print(paste("Accuracy with SDM ", acc$AUC))
 
 
