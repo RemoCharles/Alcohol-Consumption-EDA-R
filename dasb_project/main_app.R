@@ -252,8 +252,9 @@ coef(lm5)
 #predict new Value --> shiny: let used pasted parameter values of newdata
 summary(df_factorized_matrix)
 
-predLinear <- predict(lm5, newdata = data.frame(failures=1 ,higheryes =1 , schoolGP=1 ,schoolMS=0 ,Medu=3 ,studytime=1 ,
+predLinear <- predict(lm5, newdata = data.frame(failures=2 ,higheryes =1 , schoolGP=1 ,schoolMS=0 ,Medu=3 ,studytime=1 ,
                                                 Fedu=2 ,Dalc=2 ))
+print(predLinear)
 backtransform <- function(x) (exp(x)/(exp(x)+1))
 pred <- backtransform(predLinear)
 
@@ -272,4 +273,4 @@ library(SDMTools)
 acc <- accuracy(test.data$Gavg, pred, threshold=0.5)
 print(paste("Accuracy with SDM ", acc$AUC))
 
-
+View(df_factorized_matrix)

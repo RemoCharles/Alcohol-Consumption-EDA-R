@@ -62,7 +62,7 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                                        plotOutput("Grade1Plot")
                                        
                                        ),
-                              tabPanel("Failuers", h2("Percentage of Students who failed at exams with regards to school subject and gender"),
+                              tabPanel("Failures", h2("Percentage of Students who failed at exams with regards to school subject and gender"),
                                        plotOutput("failurePlot")),
                               tabPanel("Alcohol Consumption", h2("Impact of Alcohol on the final grade of Students"),
                                        plotOutput("DalcPlot"),
@@ -74,11 +74,53 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                         )
                 ),
                
-               tabPanel("Prediciton"
-                        )
+               tabPanel("Prediction",
+                 mainPanel(
+                   tabsetPanel(
+                   tabPanel("Grades Prediction for MS/GP Students"),
+                   numericInput("failures1", "How many times have you failed the course:", 0, min = 0, max = 3)),
+                   selectInput("higheryes1","Are you going for higher education:", 
+                                                             c("Yes" = 1, 
+                                                               "No" = 0)),
+                   selectInput("schoolGP1", "Are going to the GP school", 
+                                                              c("Yes" = 1,
+                                                                "No" = 0)),
+                   selectInput("schoolMS1", "Are going to the MS school", 
+                                                              c("Yes" = 1, 
+                                                               "No" = 0)),
+                   selectInput("Medu1", "Your mother's education:",
+                                                             c("None" = 0,
+                                                               "Primary education" = 1,
+                                                               "5th to 9th grade" = 2,
+                                                               "Secondary education" = 3,
+                                                               "Higher Education" = 4)),
+                   selectInput("Fedu1", "Your father's education:",
+                                                             c("None" = 0,
+                                                               "Primary education" = 1,
+                                                               "5th to 9th grade" = 2,
+                                                               "Secondary education" = 3,
+                                                               "Higher Education" = 4)),
+                   selectInput("studytime1", "Studytime (hour/week):",
+                                                             c("less than 2 hours" = 1,
+                                                               "2-5 hours" = 2,
+                                                               "5-10 hours" = 3,
+                                                               "More than 10 hours" = 4)),
+                   selectInput("DALC1", "Daily alcohol consumption:",
+                                                             c("Very low" = 1,
+                                                               "Low" = 2,
+                                                               "Medium" = 3,
+                                                               "High" = 4,
+                                                               "Very high" = 5)),
+                   actionButton("Calculate", "Calculate"))
+                 )
                ),
-  )
+               
+               tabPanel(
+                  textOutput("result"))
+               )
 
+                  
+      
 #Code for Shiny Server
 
 server <- function(input, output) {
@@ -200,10 +242,17 @@ server <- function(input, output) {
     filtered()
   })
   
+  #Function that predicts avg grade
+  observeEvent(input$Calculate, {
+    
+    #make prediction
+    predLinear <- predict(lm5, newdata = data.frame(failures=input$failures1 ,higheryes=input$higheryes1 ,schoolGP=input$schoolGP1 ,schoolMS=input$schoolMS1 ,Medu=input$Medu1 ,studytime=input$studytime1 ,
+                                                    Fedu=input$Fedu1 ,Dalc=input$Dalc1 ))
+    #show result
+    output$result <- renderText({ 
+      paste0("This is your grade: ",(predLinear))
+    })
+  })
 }
 
 shinyApp(ui = ui, server = server)
-
-#Loading the whole main_app.R script
-#Need to find out how to load specific funtions
-#source("main_app.R")
