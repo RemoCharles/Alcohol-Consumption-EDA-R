@@ -105,7 +105,7 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                                                                "2-5 hours" = 2,
                                                                "5-10 hours" = 3,
                                                                "More than 10 hours" = 4)),
-                   selectInput("DALC1", "Daily alcohol consumption:",
+                   selectInput("Dalc1", "Daily alcohol consumption:",
                                                              c("Very low" = 1,
                                                                "Low" = 2,
                                                                "Medium" = 3,
@@ -246,7 +246,9 @@ server <- function(input, output) {
   observeEvent(input$Calculate, {
     
     #make prediction
-    predLinear <- predict(lm5, newdata = data.frame(failures=input$failures1 ,higheryes=input$higheryes1 ,schoolGP=input$schoolGP1 ,schoolMS=input$schoolMS1 ,Medu=input$Medu1 ,studytime=input$studytime1 ,
+    predLinear <- predict(lm5, newdata = data.frame(failures=input$failures1 ,higheryes=input$higheryes1 
+                                                    ,schoolGP=input$schoolGP1 ,schoolMS=input$schoolMS1
+                                                    ,Medu=input$Medu1 ,studytime=input$studytime1 ,
                                                     Fedu=input$Fedu1 ,Dalc=input$Dalc1 ))
     #show result
     output$result <- renderText({ 
