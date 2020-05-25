@@ -98,7 +98,7 @@ str(df_factorized_matrix)
 
 #TO DELETE:Cut the categorical values 
 df_numeric = subset(df_factorized, select = -c(Mjob,Fjob,guardian,reason))
-View(data_numeric)
+View(df_numeric)
 
 #-----------------------------------------------------------------------------------------------------------------------------------
 #Create Training and Test Set
@@ -118,7 +118,7 @@ test.data_numeric <- setdiff(df_numeric,train.data_numeric)
 ggplot(aes(x=failures,y=Dalc),data=student_df)+
   geom_point()
 
-ggplot(aes(x=Dalc,y=G1, group=Dalc),data=student_df)+
+ggplot(aes(x=Dalc,y=G1, group=Dalc),data=df)+
   geom_boxplot()
 
 
@@ -224,21 +224,22 @@ summary(pca_model)
 
 #Create Model, What Variables should we use? (Prediction made on numerical student_df dfnum (14 variables ))
 
+#Average grades with failures
 lm1 <- lm(Gavg ~ failures, data = df_factorized_matrix)
-summary(lm3)
-
+summary(lm1)
+#Average grades with failures and higher education (bolean)
 lm2 <- lm(Gavg ~ failures+higheryes, data = df_factorized_matrix)
-summary(lm4)
-
+summary(lm2)
+#Average grades with failures and higher education and mother education and studytime
 lm3 <- lm(Gavg ~ failures+higheryes+Medu+studytime, data = df_factorized_matrix)
-summary(lm5)
-
+summary(lm3)
+# "" and father education and school 1 and school 2
 lm4 <- lm(Gavg ~ failures+higheryes+Medu+studytime+Fedu+schoolGP+schoolMS, data = df_factorized_matrix)
 summary(lm4)
-
+# "" and daily alc. consumption
 lm5 <- lm(Gavg ~ failures+higheryes+schoolGP+schoolMS+Medu+studytime+Fedu+Dalc, data = df_factorized_matrix)
 summary(lm5)
-
+# all
 lm6 <- lm(Gavg ~ .,data = df_factorized_matrix)
 summary(lm6)
 
