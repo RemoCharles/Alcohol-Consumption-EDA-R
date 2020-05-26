@@ -75,19 +75,24 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                 ),
                
                tabPanel("Prediction",
-                 mainPanel(
-                   tabsetPanel(
-                   tabPanel("Grades Prediction for MS/GP Students"),
-                   numericInput("failures1", "How many times have you failed the course:", 0, min = 0, max = 3)),
+                 mainPanel(h3("Grades Prediction for MS/GP Students"),
+                   numericInput("failures1", "How many times have you failed the course:", 0, min = 0, max = 3),
                    selectInput("higheryes1","Are you going for higher education:", 
                                                              c("Yes" = 1, 
                                                                "No" = 0)),
-                   selectInput("schoolGP1", "Are going to the GP school", 
-                                                              c("Yes" = 1,
-                                                                "No" = 0)),
-                   selectInput("schoolMS1", "Are going to the MS school", 
-                                                              c("Yes" = 1, 
-                                                               "No" = 0)),
+                   selectInput("schoolGP1", "Which school are you going to?", 
+                                                              c("Gabriel Pereira" = 1,
+                                                                "Mousinho da Silveira" = 0)),
+                   conditionalPanel(
+                     condition = "input.schoolGP1 == 'Gabriel Pereira'",
+                     selectInput("schoolMS1", "Are you going to the MS school:",
+                                 c("No" = 0))
+                   ),
+                   conditionalPanel(
+                     condition = "input.schoolGP1 == 'Mousinho da Silveira'",
+                     selectInput("schoolMS1" , "Are you going to the MS school:",
+                                 c("Yes" = 1))
+                   ),
                    selectInput("Medu1", "Your mother's education:",
                                                              c("None" = 0,
                                                                "Primary education" = 1,
@@ -111,16 +116,15 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                                                                "Medium" = 3,
                                                                "High" = 4,
                                                                "Very high" = 5)),
-                   actionButton("Calculate", "Calculate"))
-                 )
-               ),
-               
-               tabPanel(
-                  textOutput("result"))
-               )
-
-                  
+                   actionButton("Calculate", "Calculate")
+                 ),
+                 mainPanel(h3("\n", "Your average grade:", "\n"),
       
+                  h2(textOutput("result")))
+                 )
+
+)
+)     
 #Code for Shiny Server
 
 server <- function(input, output) {
@@ -245,14 +249,14 @@ server <- function(input, output) {
   #Function that predicts avg grade
   observeEvent(input$Calculate, {
     
-    #make prediction
-    predLinear <- predict(lm5, newdata = data.frame(failures=input$failures1 ,higheryes=input$higheryes1 
-                                                    ,schoolGP=input$schoolGP1 ,schoolMS=input$schoolMS1
-                                                    ,Medu=input$Medu1 ,studytime=input$studytime1 ,
-                                                    Fedu=input$Fedu1 ,Dalc=input$Dalc1 ))
-    #show result
+    #make prediction with input variables
+    predLinear <- predict(lm5, newdata = data.frame(failures=input$failures1 ,higheryes=as.numeric(input$higheryes1) 
+                                                    ,schoolGP=as.numeric(input$schoolGP1) ,schoolMS=as.numeric(input$schoolMS1)
+                                                    ,Medu=as.numeric(input$Medu1) ,studytime=as.numeric(input$studytime1) ,
+                                                    Fedu=as.numeric(input$Fedu1) ,Dalc=as.numeric(input$Dalc1 )))
+    #show result in rendered Text and round it
     output$result <- renderText({ 
-      paste0("This is your grade: ",(predLinear))
+      paste(round(predLinear, digits = 2))
     })
   })
 }
