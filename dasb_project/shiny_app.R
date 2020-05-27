@@ -37,8 +37,7 @@ df$subject <- as.factor(df$subject)
 df$Dalc <- as.factor(df$Dalc)
 df$Walc <- as.factor(df$Walc)
 df$failures <- as.factor(df$failures)
-str(df)
-View(df)
+
 #Code for Shiny UI
 
 ui <- fluidPage(theme = shinytheme("flatly"),
