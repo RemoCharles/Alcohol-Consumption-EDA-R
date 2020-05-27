@@ -17,8 +17,15 @@ library(corrgram)
 #-----------------------------------------------------------------------------------------------------------------------------------
 #EXPLORE DATASET
 
+students_mat <- read_csv("student-mat.csv")
+students_mat$class <- "Mat"
+students_por<-read_csv("student-por.csv")
+students_por$class <- "Por"
+
+df_raw = rbind(students_por, students_mat)
+
 #Open and read file
-df_raw <- read.csv("student_merged.csv", stringsAsFactors = FALSE)
+#df_raw <- read.csv("student_merged.csv", stringsAsFactors = FALSE)
 
 df<-df_raw %>% distinct(school,sex,age,address,famsize,Pstatus,
                   Medu,Fedu,Mjob,Fjob,reason,
