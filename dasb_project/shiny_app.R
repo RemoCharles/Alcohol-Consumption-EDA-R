@@ -42,7 +42,7 @@ df$failures <- as.factor(df$failures)
 
 ui <- fluidPage(theme = shinytheme("flatly"),
   titlePanel("Student Alcohol Consumption"),
-    navbarPage("DASB Project - Group 3",
+    navbarPage("DASB Project - Group 4",
                
                tabPanel("Project proposal",
                         uiOutput("pdfview")
@@ -83,6 +83,7 @@ ui <- fluidPage(theme = shinytheme("flatly"),
 <li>Walc - weekend alcohol consumption (numeric: from 1 - very low to 5 - very high) </li>
 <li>health - current health status (numeric: from 1 - very bad to 5 - very good) </li>
 <li>absences - number of school absences (numeric: from 0 to 93) </li>
+<li>subject - specific Subject (binary: Por=Portguese or Mat=Mathematics) </li>
 </ul>")
                         )
                ),
