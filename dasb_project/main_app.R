@@ -18,9 +18,9 @@ library(corrgram)
 #EXPLORE DATASET
 
 students_mat <- read_csv("student-mat.csv")
-students_mat$class <- "Mat"
+students_mat$subject <- "Mat"
 students_por<-read_csv("student-por.csv")
-students_por$class <- "Por"
+students_por$subject <- "Por"
 
 df_raw = rbind(students_por, students_mat)
 
@@ -66,7 +66,7 @@ View(student_df)
 df_factorized <- student_df
 
 
-df_factorized$class<-as.numeric(factor(df_factorized$class))
+df_factorized$subject<-as.numeric(factor(df_factorized$subject))
 df_factorized$famsize<-as.numeric(factor(df_factorized$famsize))
 df_factorized$Pstatus<-as.numeric(factor(df_factorized$Pstatus))
 df_factorized$address<-as.numeric(factor(df_factorized$address))
@@ -199,7 +199,7 @@ print(ggheatmap)
 
 
 cor_df <- cor(df_factorized_matrix, df_factorized_matrix, method = "pearson")
-student_cor_df<- data.frame(cor=cor_df[1:40,41], varn = names(cor_df[1:40,41])) 
+student_cor_df<- data.frame(cor=cor_df[1:41,42], varn = names(cor_df[1:41,42])) 
 student_cor_df<- student_cor_df%>%mutate(cor_abs = abs(cor)) %>% arrange(desc(cor_abs))
 plot(student_cor_df$cor_abs, type="l")
 
@@ -213,6 +213,7 @@ pca = prcomp(y, scale. = T, center = T)
 plot(pca, type="l")
 summary(pca)
 
+#TODO PCA Anpassen mit nur noch 4 Werten
 pca_df <- data.frame(pca$x)
 pca_df <- pca_df %>% select(-PC7,-PC8) 
 pca_df$Gavg = filter_df$Gavg
@@ -246,11 +247,18 @@ summary(lm4)
 # "" and daily alc. consumption
 lm5 <- lm(Gavg ~ failures+higheryes+schoolGP+schoolMS+Medu+studytime+Fedu+Dalc, data = df_factorized_matrix)
 summary(lm5)
+
+lm8 <- lm(Gavg ~ failures+higheryes+schoolGP+Medu+classPor+studytime+Fedu, data = df_factorized_matrix)
+summary(lm8)
+
+lm7 <- lm(Gavg ~ paidyes+schoolGP+schoolMS+absences+failures, data = df_factorized_matrix)
+summary(lm7)
+
 # all
 lm6 <- lm(Gavg ~ .,data = df_factorized_matrix)
 summary(lm6)
 
-anova(lm1,lm2, lm3, lm4,lm5, pca_model)
+anova(lm1,lm2, lm3, lm4,lm5, pca_model, lm7, lm8)
 
 
 #Move on with model 5 because lowest RSS
