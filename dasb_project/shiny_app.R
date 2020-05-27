@@ -2,16 +2,43 @@
 library(DT)
 library(shiny)
 library(shinythemes)
-library(ggplot2)
+library(knitr)
+library(pander)
+library(plotly)
+library(plyr)
+library(magrittr)
+library(readr)
+library(rpart)
+library(DMwR)
 library(dplyr)
-df <- read.csv("student_merged.csv", stringsAsFactors = FALSE)
+library(corrplot)
+library(randomForest)
+library(ggplot2)
+library(reshape2)
 
-#Code for Data Preapration (for correlation or Prediciton Model)
+#EXPLORE DATASET
+
+students_mat <- read_csv("student-mat.csv")
+students_mat$subject <- "Mat"
+students_por<-read_csv("student-por.csv")
+students_por$subject <- "Por"
+
+df_raw = rbind(students_por, students_mat)
+
+#Open and read file
+#df_raw <- read.csv("student_merged.csv", stringsAsFactors = FALSE)
+
+df<-df_raw %>% distinct(school,sex,age,address,famsize,Pstatus,
+                        Medu,Fedu,Mjob,Fjob,reason,
+                        guardian,traveltime,studytime,failures,
+                        schoolsup, famsup,activities,nursery,higher,internet,
+                        romantic,famrel,freetime,goout,Dalc,Walc,health,absences, .keep_all = TRUE)
+df$subject <- as.factor(df$subject)
 df$Dalc <- as.factor(df$Dalc)
 df$Walc <- as.factor(df$Walc)
 df$failures <- as.factor(df$failures)
-
-
+str(df)
+View(df)
 #Code for Shiny UI
 
 ui <- fluidPage(theme = shinytheme("flatly"),
@@ -68,9 +95,9 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                             sliderInput("ageInput", "Age", min = 15, max = 22,
                              value = c(15, 22)),
                             checkboxGroupInput("subjectInput", "Subject",
-                                               choiceNames = c("Mathematics", "portuguese"),
-                                               choiceValues = c("MS", "GP"),
-                                               selected = c("MS", "GP")
+                                               choiceNames = c("Mathematics", "Portuguese"),
+                                               choiceValues = c("Mat", "Por"),
+                                               selected = c("Mat", "Por")
                             ),
                             uiOutput("genderOutput"),
                             checkboxGroupInput("pStatusInput", "Parent status",
@@ -186,7 +213,7 @@ server <- function(input, output) {
     df %>%
       filter(age >= input$ageInput[1],
              age <= input$ageInput[2],
-             school %in% input$subjectInput,
+             subject %in% input$subjectInput,
              Pstatus %in% input$pStatusInput,
              sex %in% input$genderInput,
              Dalc %in% input$dAlcInput,
@@ -201,9 +228,9 @@ server <- function(input, output) {
     }
     
     ggplot(filtered()) +
-      geom_bar(aes(x=failures, y = ..prop.., stat="count", fill=school, group=school), position="dodge") +
+      geom_bar(aes(x=failures, y = ..prop.., stat="count", fill=subject, group=subject), position="dodge") +
       geom_text(aes(x=failures, label = scales::percent(..prop..),
-                     y= ..prop.., group=school ), stat= "count", position = position_dodge(width = 1), vjust = -.5) +
+                     y= ..prop.., group=subject ), stat= "count", position = position_dodge(width = 1), vjust = -.5) +
       labs(y="Percent", x="Number of failed Exams") +
       facet_grid(~ sex)+
       scale_y_continuous(labels=scales::percent)
@@ -220,7 +247,7 @@ server <- function(input, output) {
       geom_bar(aes(y = ..prop.., stat="count"), position="dodge") +
       scale_y_continuous(labels=scales::percent) +
       labs(y="Percent", x="Final grade") +
-      facet_grid(~ school)
+      facet_grid(~ subject)
   })
   
   output$Grade2Plot <- renderPlot({
@@ -228,13 +255,13 @@ server <- function(input, output) {
     if (is.null(filtered())) {
       return()
     }
-    
+
     ggplot(filtered(), aes(G2, color=sex, fill=sex)) +
       geom_bar(aes(y = ..prop.., stat="count"), position="dodge") +
 
       scale_y_continuous(labels=scales::percent) +
       labs(y="Percent", x="Second period grade") +
-      facet_grid(~ school)
+      facet_grid(~ subject)
   })
   
   output$Grade1Plot <- renderPlot({
@@ -247,7 +274,7 @@ server <- function(input, output) {
       geom_bar(aes(y = ..prop.., stat="count"), position="dodge") +
       scale_y_continuous(labels=scales::percent) +
       labs(y="Percent", x="First period grade") +
-      facet_grid(~ school)
+      facet_grid(~ subject)
   })
   
   output$DalcPlot <- renderPlot({
