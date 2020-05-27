@@ -205,7 +205,7 @@ pca = prcomp(y, scale. = T, center = T)
 plot(pca, type="l")
 summary(pca)
 
-#We cut PC7 and PC7 cause 95% of the Variance is already explained by other Dimensions 
+#We cut PC7 and PC8 cause 95% of the Variance is already explained by other Dimensions 
 pca_df <- data.frame(pca$x)
 pca_df <- pca_df %>% select(-PC7,-PC8) 
 pca_df$Gavg = filter_df$Gavg
@@ -246,21 +246,21 @@ lm_all <- lm(Gavg ~ .,data = df_factorized_matrix)
 summary(lm_all)
 
 #The numeric model is worse
-#This shows that we can't narrow the the selection of variables to numeric, cause the model is in need of
+#This shows that we can't narrow our selection of variables to numeric, cause the model is in need of
 #the categorical data points given in our dataset
-#We will not continue test without categorical data
+#We will not continue tests without categorical data
 
-anova(lm1,lm2, lm3, lm4,lm5, lm6, lm7)
+anova(lm1,lm2, lm3, lm4,lm5, lm7)
 
 
-#Move on with model 5 because lowest RSS
+#Move on with model 7 because lowest RSS
 summary(lm7)
 summary(lm7)$coef
 #As you can see. All Variables chosen in the Model have some kind of significants (t value) to the dependent variable (Gavg)
 #Because of the low correlation between datapoints and
-#R2 Value of 0.2722 we can expect our models accuracy to be sparse (R2 = 0.2722). It the best we could build.
+#R2 Value of 0.2722 we can expect our models accuracy to be sparse (R2 = 0.2722). It's the best we could build.
 
-#predict new Value --> shiny: let used pasted parameter values of newdata
+#predict new Value --> shiny: used pasted parameter values of newdata
 summary(df_factorized_matrix)
 
 predLinear <- predict(lm7, newdata = data.frame(failures=2 ,higheryes =1 , schoolGP=1 , Medu=3 ,subjectPor=1 , 
@@ -273,7 +273,7 @@ fitted.results <- predict(lm7, newdata=subset(test.data, select=c(failures,highe
 #Model Performance Evaluation
 RMSE(fitted.results, test.data$Gavg)
 Percentage_RMSE = 2.572/mean(test.data$Gavg) 
-#The RMSE shows that prediction Error, with 22% is fairly low (and surprisingly low), given the R2 Value
+#The RMSE shows that prediction Error, with 22% is fairly low (and surprisingly good), given the R2 Value
 
 #R2 Value is low, meaning the observed Values aren't very correlated with the predicted values (as expected from the Model Evaluation)
 R2 (fitted.results, test.data$Gavg)
