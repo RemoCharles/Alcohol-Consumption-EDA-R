@@ -145,16 +145,6 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                    selectInput("schoolGP1", "Which school are you going to?", 
                                                               c("Gabriel Pereira" = 1,
                                                                 "Mousinho da Silveira" = 0)),
-                   conditionalPanel(
-                     condition = "input.schoolGP1 == 'Gabriel Pereira'",
-                     selectInput("schoolMS1", "Are you going to the MS school:",
-                                 c("No" = 0))
-                   ),
-                   conditionalPanel(
-                     condition = "input.schoolGP1 == 'Mousinho da Silveira'",
-                     selectInput("schoolMS1" , "Are you going to the MS school:",
-                                 c("Yes" = 1))
-                   ),
                    selectInput("Medu1", "Your mother's education:",
                                                              c("None" = 0,
                                                                "Primary education" = 1,
@@ -178,6 +168,9 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                                                                "Medium" = 3,
                                                                "High" = 4,
                                                                "Very high" = 5)),
+                   selectInput("subjectPor1", "Which subject are you visiting:",
+                               c("Portuguese" = 1,
+                                 "Mathematics" = 0)),
                    actionButton("Calculate", "Calculate")
                  ),
                  mainPanel(h3("\n", "Your average grade:", "\n"),
@@ -312,9 +305,8 @@ server <- function(input, output) {
   observeEvent(input$Calculate, {
     
     #make prediction with input variables
-    predLinear <- predict(lm5, newdata = data.frame(failures=input$failures1 ,higheryes=as.numeric(input$higheryes1) 
-                                                    ,schoolGP=as.numeric(input$schoolGP1) ,schoolMS=as.numeric(input$schoolMS1)
-                                                    ,Medu=as.numeric(input$Medu1) ,studytime=as.numeric(input$studytime1) ,
+    predLinear <- predict(lm7, newdata = data.frame(failures=input$failures1 ,higheryes=as.numeric(input$higheryes1) 
+                                                    ,schoolGP=as.numeric(input$schoolGP1),Medu=as.numeric(input$Medu1), subjectPor=as.numeric(input$subjectPor1) ,studytime=as.numeric(input$studytime1) ,
                                                     Fedu=as.numeric(input$Fedu1) ,Dalc=as.numeric(input$Dalc1 )))
     #show result in rendered Text and round it
     output$result <- renderText({ 
