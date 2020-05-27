@@ -13,6 +13,8 @@ library(randomForest)
 library(ggplot2)
 library(reshape2)
 library(corrgram)
+library(caret)
+library(tidyverse)
 
 #-----------------------------------------------------------------------------------------------------------------------------------
 #EXPLORE DATASET
@@ -45,23 +47,7 @@ student_df = subset(df, select = -c(G1,G2,G3))
 str(student_df)
 View(student_df)
 
-#TO DO: Manipulate Data so max and min values are set
-
-
-#Filtering Data to only numeric Data
-# dfnum <- Filter(is.numeric, student_df)
-# summary(dfnum)
-# student_df.pca <- prcomp(dfnum[,c(1:14)],center = TRUE, scale. = TRUE)
-# summary(student_df.pca)
-# dfnum_cor <- cor(dfnum[1:13], dfnum$G1)
-# 
-# dfnum_withoutgrades <-(dfnum[,c(1:14)])
-
-#factorizing all Data categorical data
-
-
-
-
+#Factorize all Columns
 
 df_factorized <- student_df
 
@@ -94,7 +80,6 @@ df_factorized$guardian <- as.factor(df$guardian)
 df_factorized$reason <- as.factor(df$reason)
 
 
-#possibly use factor (statt numerisch)
 str(df_factorized)
 View(df_factorized)
 
@@ -102,8 +87,9 @@ View(df_factorized)
 df_factorized_matrix <- data.frame(model.matrix( ~ .- 1, data=student_df)) 
 
 str(df_factorized_matrix)
+summary(df_factorized_matrix)
 
-#TO DELETE:Cut the categorical values 
+#Cut the categorical values in case numeric Model makes sense 
 df_numeric = subset(df_factorized, select = -c(Mjob,Fjob,guardian,reason))
 View(df_numeric)
 
@@ -121,14 +107,14 @@ test.data_numeric <- setdiff(df_numeric,train.data_numeric)
 #-----------------------------------------------------------------------------------------------------------------------------------
 #Visualize Correlations
 
-#Data Exploration finding Correlations
+#Data Exploration finding Correlations (visualized in shiny too)
 ggplot(aes(x=failures,y=Dalc),data=student_df)+
   geom_point()
 
-ggplot(aes(x=Dalc,y=G1, group=Dalc),data=df)+
+ggplot(aes(x=Dalc,y=Gavg, group=Dalc),data=df)+
   geom_boxplot()
 
-
+#Family Relationship 
 plot(famrel ~ absences,data=student_df )
 
 res <- cor(student_df)
@@ -197,40 +183,40 @@ print(ggheatmap)
 
 #PCA
 
-
+#With PCA We create A correlation Matrix to narrow down the variable for our model
 cor_df <- cor(df_factorized_matrix, df_factorized_matrix, method = "pearson")
+
+#Determine the Independent Variables 1:41 and the dependent Gavg (42) 
 student_cor_df<- data.frame(cor=cor_df[1:41,42], varn = names(cor_df[1:41,42])) 
 student_cor_df<- student_cor_df%>%mutate(cor_abs = abs(cor)) %>% arrange(desc(cor_abs))
 plot(student_cor_df$cor_abs, type="l")
+
+#As you can see there's around 7-10 Variables that can explain a correlation of over 15%
 
 #Filter out Values with under 15% Correlation
 list_var_names <- student_cor_df %>% filter(cor_abs>0.15)
 filter_df <- data.frame(df_factorized_matrix) %>% select(Gavg,one_of(as.character(list_var_names$varn)))
 summary(filter_df)
 
+#These values we determine for our Best Model (lm7)
+
 y <- filter_df %>% select(-Gavg)
 pca = prcomp(y, scale. = T, center = T)
 plot(pca, type="l")
 summary(pca)
 
-#TODO PCA Anpassen mit nur noch 4 Werten
+#We cut PC7 and PC7 cause 95% of the Variance is already explained by other Dimensions 
 pca_df <- data.frame(pca$x)
 pca_df <- pca_df %>% select(-PC7,-PC8) 
 pca_df$Gavg = filter_df$Gavg
 pca_model <- lm(data = pca_df, Gavg ~ .)
 summary(pca_model)
 
-
-#student_df.pca <- prcomp(df_factorized,center = TRUE, scale. = TRUE)
-#student_df.pca <- prcomp(df_clean[,c(1:27)],center = TRUE, scale. = TRUE)
-#summary(student_df.pca)
-
 #PCA shows we don't have many variables that correlate or explain the rest of the variables
  
 
 
-
-#Create Model, What Variables should we use? (Prediction made on numerical student_df dfnum (14 variables ))
+#Create Model to predict a student's Average Grade, What Variables should we use? (Prediction made on df_factorized_matrix with all factorized Data ))
 
 #Average grades with failures
 lm1 <- lm(Gavg ~ failures, data = df_factorized_matrix)
@@ -239,7 +225,7 @@ summary(lm1)
 lm2 <- lm(Gavg ~ failures+higheryes, data = df_factorized_matrix)
 summary(lm2)
 #Average grades with failures and higher education and mother education and studytime
-lm3 <- lm(Gavg ~ failures+higheryes+Medu+studytime, data = df_factorized_matrix)
+lm3 <- lm(Gavg ~ failures+higheryes+Medu+studytime+Fedu, data = df_factorized_matrix)
 summary(lm3)
 # "" and father education and school 1 and school 2
 lm4 <- lm(Gavg ~ failures+higheryes+Medu+studytime+Fedu+schoolGP+schoolMS, data = df_factorized_matrix)
@@ -247,45 +233,49 @@ summary(lm4)
 # "" and daily alc. consumption
 lm5 <- lm(Gavg ~ failures+higheryes+schoolGP+schoolMS+Medu+studytime+Fedu+Dalc, data = df_factorized_matrix)
 summary(lm5)
-
-lm6 <- lm(Gavg ~ paidyes+schoolGP+schoolMS+absences+failures, data = df_factorized_matrix)
-summary(lm6)
-
+#Taking the Variables with highest correlation values from PCA
 lm7 <- lm(Gavg ~ failures+higheryes+schoolGP+Medu+subjectPor+studytime+Fedu+Dalc, data = df_factorized_matrix)
 summary(lm7)
 
-# all
-lm9 <- lm(Gavg ~ .,data = df_factorized_matrix)
-summary(lm9)
 
-anova(lm1,lm2, lm3, lm4,lm5, pca_model, lm6, lm7)
+# Testing Models on the numeric Dataset that we prepared
+lm_numeric <- lm(Gavg ~ .,data = df_numeric)
+summary(lm_numeric)
+
+lm_all <- lm(Gavg ~ .,data = df_factorized_matrix)
+summary(lm_all)
+
+#The numeric model is worse
+#This shows that we can't narrow the the selection of variables to numeric, cause the model is in need of
+#the categorical data points given in our dataset
+#We will not continue test without categorical data
+
+anova(lm1,lm2, lm3, lm4,lm5, lm6, lm7)
 
 
 #Move on with model 5 because lowest RSS
-coef(lm5)
+summary(lm7)
+summary(lm7)$coef
+#As you can see. All Variables chosen in the Model have some kind of significants (t value) to the dependent variable (Gavg)
+#Because of the low correlation between datapoints and
+#R2 Value of 0.2722 we can expect our models accuracy to be sparse (R2 = 0.2722). It the best we could build.
 
 #predict new Value --> shiny: let used pasted parameter values of newdata
 summary(df_factorized_matrix)
 
-predLinear <- predict(lm7, newdata = data.frame(failures=2 ,higheryes =1 , schoolGP=1 , Medu=3 ,subjectPor=1 ,
+predLinear <- predict(lm7, newdata = data.frame(failures=2 ,higheryes =1 , schoolGP=1 , Medu=3 ,subjectPor=1 , 
                                                 studytime=2 ,Fedu=2, Dalc=1 ))
 print(predLinear)
-backtransform <- function(x) (exp(x)/(exp(x)+1))
-pred <- backtransform(predLinear)
 
-#make accuracy test
-fitted.results <- predict(lm5, newdata=subset(test.data, select=c(failures,higheryes,schoolGP,schoolMS,
-                                                                  Medu,studytime,Fedu,Dalc)))
+#Predicting our Test Data with the Model
+fitted.results <- predict(lm7, newdata=subset(test.data, select=c(failures,higheryes,schoolGP,Medu,subjectPor,
+                                                                  studytime,Fedu,Dalc)))
+#Model Performance Evaluation
+RMSE(fitted.results, test.data$Gavg)
+Percentage_RMSE = 2.572/mean(test.data$Gavg) 
+#The RMSE shows that prediction Error, with 22% is fairly low (and surprisingly low), given the R2 Value
 
-backtransform <- function(x) (exp(x)/(exp(x)+1))
-pred <- backtransform(fitted.results)
-pred <- round(pred, 0)
+#R2 Value is low, meaning the observed Values aren't very correlated with the predicted values (as expected from the Model Evaluation)
+R2 (fitted.results, test.data$Gavg)
 
-misClasificError <- mean(pred != test.data$Gavg)
-print(paste("Accuracy", 1-misClasificError))
 
-library(SDMTools)
-acc <- accuracy(test.data$Gavg, pred, threshold=0.5)
-print(paste("Accuracy with SDM ", acc$AUC))
-
-View(df_factorized_matrix)
