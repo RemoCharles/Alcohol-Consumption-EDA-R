@@ -67,8 +67,8 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                             titlePanel("Exploratory Data Analysis"),
                             sliderInput("ageInput", "Age", min = 15, max = 22,
                              value = c(15, 22)),
-                            checkboxGroupInput("subjectInput", "Genders",
-                                               choiceNames = c("Mathematics", "Geography"),
+                            checkboxGroupInput("subjectInput", "Subject",
+                                               choiceNames = c("Mathematics", "portuguese"),
                                                choiceValues = c("MS", "GP"),
                                                selected = c("MS", "GP")
                             ),
@@ -216,11 +216,11 @@ server <- function(input, output) {
       return()
     }
     
-    ggplot(filtered(), aes(G3, color=school, fill=school)) +
+    ggplot(filtered(), aes(G3, color=sex, fill=sex)) +
       geom_bar(aes(y = ..prop.., stat="count"), position="dodge") +
       scale_y_continuous(labels=scales::percent) +
       labs(y="Percent", x="Final grade") +
-      facet_grid(~ sex)
+      facet_grid(~ school)
   })
   
   output$Grade2Plot <- renderPlot({
@@ -229,12 +229,12 @@ server <- function(input, output) {
       return()
     }
     
-    ggplot(filtered(), aes(G2, color=school, fill=school)) +
+    ggplot(filtered(), aes(G2, color=sex, fill=sex)) +
       geom_bar(aes(y = ..prop.., stat="count"), position="dodge") +
 
       scale_y_continuous(labels=scales::percent) +
       labs(y="Percent", x="Second period grade") +
-      facet_grid(~ sex)
+      facet_grid(~ school)
   })
   
   output$Grade1Plot <- renderPlot({
@@ -243,11 +243,11 @@ server <- function(input, output) {
       return()
     }
     
-    ggplot(filtered(), aes(G1, color=school, fill=school)) +
+    ggplot(filtered(), aes(G1, color=sex, fill=sex)) +
       geom_bar(aes(y = ..prop.., stat="count"), position="dodge") +
       scale_y_continuous(labels=scales::percent) +
       labs(y="Percent", x="First period grade") +
-      facet_grid(~ sex)
+      facet_grid(~ school)
   })
   
   output$DalcPlot <- renderPlot({
