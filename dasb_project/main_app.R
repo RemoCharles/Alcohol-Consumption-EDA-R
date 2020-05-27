@@ -66,7 +66,7 @@ View(student_df)
 df_factorized <- student_df
 
 
-df_factorized$subject<-as.numeric(factor(df_factorized$subject))
+df_factorized$subject<-as.factor(factor(df_factorized$subject))
 df_factorized$famsize<-as.numeric(factor(df_factorized$famsize))
 df_factorized$Pstatus<-as.numeric(factor(df_factorized$Pstatus))
 df_factorized$address<-as.numeric(factor(df_factorized$address))
@@ -96,7 +96,7 @@ df_factorized$reason <- as.factor(df$reason)
 
 #possibly use factor (statt numerisch)
 str(df_factorized)
-
+View(df_factorized)
 
 #Put them in Matrix Model to factorize(or just factorize by hand)
 df_factorized_matrix <- data.frame(model.matrix( ~ .- 1, data=student_df)) 
@@ -248,17 +248,17 @@ summary(lm4)
 lm5 <- lm(Gavg ~ failures+higheryes+schoolGP+schoolMS+Medu+studytime+Fedu+Dalc, data = df_factorized_matrix)
 summary(lm5)
 
-lm8 <- lm(Gavg ~ failures+higheryes+schoolGP+Medu+classPor+studytime+Fedu, data = df_factorized_matrix)
-summary(lm8)
+lm6 <- lm(Gavg ~ paidyes+schoolGP+schoolMS+absences+failures, data = df_factorized_matrix)
+summary(lm6)
 
-lm7 <- lm(Gavg ~ paidyes+schoolGP+schoolMS+absences+failures, data = df_factorized_matrix)
+lm7 <- lm(Gavg ~ failures+higheryes+schoolGP+Medu+subjectPor+studytime+Fedu+Dalc, data = df_factorized_matrix)
 summary(lm7)
 
 # all
-lm6 <- lm(Gavg ~ .,data = df_factorized_matrix)
-summary(lm6)
+lm9 <- lm(Gavg ~ .,data = df_factorized_matrix)
+summary(lm9)
 
-anova(lm1,lm2, lm3, lm4,lm5, pca_model, lm7, lm8)
+anova(lm1,lm2, lm3, lm4,lm5, pca_model, lm6, lm7)
 
 
 #Move on with model 5 because lowest RSS
@@ -267,8 +267,8 @@ coef(lm5)
 #predict new Value --> shiny: let used pasted parameter values of newdata
 summary(df_factorized_matrix)
 
-predLinear <- predict(lm5, newdata = data.frame(failures=2 ,higheryes =1 , schoolGP=1 ,schoolMS=0 ,Medu=3 ,studytime=1 ,
-                                                Fedu=2 ,Dalc=2 ))
+predLinear <- predict(lm7, newdata = data.frame(failures=2 ,higheryes =1 , schoolGP=1 , Medu=3 ,subjectPor=1 ,
+                                                studytime=2 ,Fedu=2, Dalc=1 ))
 print(predLinear)
 backtransform <- function(x) (exp(x)/(exp(x)+1))
 pred <- backtransform(predLinear)
