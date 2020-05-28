@@ -52,12 +52,11 @@ View(student_df)
 df_factorized <- student_df
 
 
-df_factorized$subject<-as.factor(factor(df_factorized$subject))
+
 df_factorized$famsize<-as.numeric(factor(df_factorized$famsize))
 df_factorized$Pstatus<-as.numeric(factor(df_factorized$Pstatus))
 df_factorized$address<-as.numeric(factor(df_factorized$address))
 df_factorized$sex<-as.numeric(factor(df_factorized$sex))
-df_factorized$school<-as.numeric(factor(df_factorized$school))
 df_factorized$schoolsup<-as.numeric(factor(df_factorized$schoolsup))
 df_factorized$famsup<-as.numeric(factor(df_factorized$famsup))
 df_factorized$paid<-as.numeric(factor(df_factorized$paid))
@@ -74,6 +73,8 @@ df_factorized$reason<-as.numeric(factor(df_factorized$reason))
 
 #as factor for the categorical Data
 
+df_factorized$subject<-as.factor(factor(df_factorized$subject))
+df_factorized$school<-as.factor(factor(df_factorized$school))
 df_factorized$Mjob <- as.factor(df$Mjob)
 df_factorized$Fjob <- as.factor(df$Fjob)
 df_factorized$guardian <- as.factor(df$guardian)
@@ -90,8 +91,8 @@ str(df_factorized_matrix)
 summary(df_factorized_matrix)
 
 #Cut the categorical values in case numeric Model makes sense 
-df_numeric = subset(df_factorized, select = -c(Mjob,Fjob,guardian,reason))
-View(df_numeric)
+df_numeric = subset(df_factorized, select = -c(Mjob,Fjob,guardian,reason,school,subject))
+str(df_numeric)
 
 #-----------------------------------------------------------------------------------------------------------------------------------
 #Create Training and Test Set
@@ -117,12 +118,13 @@ ggplot(aes(x=Dalc,y=Gavg, group=Dalc),data=df)+
 #Family Relationship 
 plot(famrel ~ absences,data=student_df )
 
-res <- cor(student_df)
+res <- cor(df_factorized_matrix)
 round(res, 2)
 
 #Correlation Matrix Results: shows strong Correlation between all Grades (cut them or average them)
 cormat <- cor(round(df_numeric,2))
 corrplot(df_cor, method = "number")
+#for numeric correlation Matrix, change df to df_factorized_matrix
 
 
 #Try and find other correlations (Reshape Correlation to show highest correlations first)
