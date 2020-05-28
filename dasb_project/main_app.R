@@ -276,6 +276,6 @@ Percentage_RMSE = 2.572/mean(test.data$Gavg)
 #The RMSE shows that prediction Error, with 22% is fairly low (and surprisingly good), given the R2 Value
 
 #R2 Value is low, meaning the observed Values aren't very correlated with the predicted values (as expected from the Model Evaluation)
-R2 (fitted.results, test.data$Gavg)
+R2(fitted.results, test.data$Gavg)
 
 
