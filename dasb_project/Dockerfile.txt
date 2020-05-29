@@ -1,0 +1,52 @@
+# get shiny serves plus tidyverse packages image
+FROM rocker/shiny-verse:latest
+
+# system libraries of general use
+RUN apt-get update && apt-get install -y \
+    sudo \
+    pandoc \
+    pandoc-citeproc \
+    libcurl4-gnutls-dev \
+    libcairo2-dev \
+    libxt-dev \
+    libssl-dev \
+    libssh2-1-dev 
+  
+
+# install R packages required 
+# (change it dependeing on the packages you need)
+RUN R -e "install.packages('shiny', repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('DT', repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('shinythemes', repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('knitr', repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('pander', repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('plyr', repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('magrittr', repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('readr', repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('DMWR', repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('dplyr', repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('corrplot', repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('randomForest', repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('ggplot2', repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('reshape2', repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('plotly', repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('rpart', repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('corrgram', repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('caret', repos='http://cran.rstudio.com/')"
+RUN R -e "install.packages('tidyverse', repos='http://cran.rstudio.com/')"
+
+
+# copy the app to the image
+COPY dasb_project.Rproj /Desktop/Alcohol-Consumption-EDA-R/dasb_project/
+COPY shiny_app.R /Desktop/Alcohol-Consumption-EDA-R/dasb_project/
+COPY R /Desktop/Alcohol-Consumption-EDA-R/dasb_project/R
+COPY data /Desktop/Alcohol-Consumption-EDA-R/dasb_project/data
+
+# select port
+EXPOSE 3838
+
+# allow permission
+RUN sudo chown -R shiny:shiny /Desktop/Alcohol-Consumption-EDA-R/dasb_project/
+
+# run app
+CMD ["/usr/bin/shiny-server.sh"]
