@@ -19,9 +19,9 @@ library(tidyverse)
 #-----------------------------------------------------------------------------------------------------------------------------------
 #EXPLORE DATASET
 
-students_mat <- read_csv("student-mat.csv")
+students_mat <- read_csv("data/student-mat.csv")
 students_mat$subject <- "Mat"
-students_por<-read_csv("student-por.csv")
+students_por<-read_csv("data/student-por.csv")
 students_por$subject <- "Por"
 
 df_raw = rbind(students_por, students_mat)
@@ -123,7 +123,7 @@ round(res, 2)
 
 #Correlation Matrix Results: shows strong Correlation between all Grades (cut them or average them)
 cormat <- cor(round(df_numeric,2))
-corrplot(df_cor, method = "number")
+corrplot(cormat, method = "number")
 #for numeric correlation Matrix, change df to df_factorized_matrix
 
 

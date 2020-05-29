@@ -18,9 +18,9 @@ library(reshape2)
 
 #EXPLORE DATASET
 
-students_mat <- read_csv("student-mat.csv")
+students_mat <- read_csv("data/student-mat.csv")
 students_mat$subject <- "Mat"
-students_por<-read_csv("student-por.csv")
+students_por<-read_csv("data/student-por.csv")
 students_por$subject <- "Por"
 
 df_raw = rbind(students_por, students_mat)
