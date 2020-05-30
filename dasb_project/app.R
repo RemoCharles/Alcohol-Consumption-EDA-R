@@ -36,7 +36,6 @@ df<-df_raw %>% distinct(school,sex,age,address,famsize,Pstatus,
                   guardian,traveltime,studytime,failures,
                   schoolsup, famsup,activities,nursery,higher,internet,
                   romantic,famrel,freetime,goout,Dalc,Walc,health,absences, .keep_all = TRUE)
-View(df)
 str(df)
 
 #-----------------------------------------------------------------------------------------------------------------------------------
@@ -47,7 +46,7 @@ df$Gavg<-(df$G1+df$G2+df$G3)/3
 
 student_df = subset(df, select = -c(G1,G2,G3))
 str(student_df)
-View(student_df)
+
 
 #Factorize all Columns
 
@@ -84,7 +83,7 @@ df_factorized$reason <- as.factor(df$reason)
 
 
 str(df_factorized)
-View(df_factorized)
+
 
 #Put them in Matrix Model to factorize(or just factorize by hand)
 df_factorized_matrix <- data.frame(model.matrix( ~ .- 1, data=student_df)) 
@@ -144,7 +143,7 @@ get_upper_tri <- function(cormat){
   return(cormat)
 }
 # Melt the correlation matrix
-melted_cormat <- melt(upper_tri, na.rm = TRUE)
+#melted_cormat <- melt(upper_tri, na.rm = TRUE)
 # Heatmap
 ggplot(data = melted_cormat, aes(Var2, Var1, fill = value))+
   geom_tile(color = "white")+
