@@ -1,4 +1,4 @@
-source("app.R")
+source("global.R")
 server <- function(input, output) {
   
   #PDF output of the project proposal. Shiny app has to be opened in Browser and NOT in Rstudio!!!!
