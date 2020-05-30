@@ -17,5 +17,6 @@ Additional Information:
 -------------------------------------------
 - Only tested with Linux Ubuntu 18.04.4 LTS
 - Only tested with Docker version 19.03.10
+- Hosted on a personal nginx webserver on http://shiny.remocharles.ch/
 
 Have a nice day!
