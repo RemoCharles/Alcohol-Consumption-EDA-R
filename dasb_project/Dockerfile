@@ -1,6 +1,6 @@
 FROM rocker/shiny:3.5.1
 
-RUN apt-get -y install libcurl4-gnutls-dev libxml2-dev libssl-dev sudo
+RUN apt-get -y install libcurl4-gnutls-dev libxml2-dev libssl-dev
 RUN rm -r /srv/shiny-server
 RUN mkdir -p /var/lib/shiny-server/bookmarks/shiny
 RUN sed -i 's/3838/3838 0.0.0.0/' /etc/shiny-server/shiny-server.conf
@@ -26,8 +26,10 @@ RUN R -e "install.packages('caret', repos='http://cran.rstudio.com/')"
 RUN R -e "devtools::install_github('kwstat/corrgram')"
 
 COPY /app /srv/shiny-server/ 
-RUN sudo chown -R shiny:shiny /srv/shiny-server
+RUN chmod -R 755 /srv/shiny-server/
+RUN chmod -R +rx /srv/shiny-server/
+RUN chown -R shiny:shiny /srv/shiny-server
 
-
-EXPOSE 3838 
+USER shiny
+EXPOSE 3838
 CMD ["/usr/bin/shiny-server.sh"]
