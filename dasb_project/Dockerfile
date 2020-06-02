@@ -33,3 +33,8 @@ RUN chown -R shiny:shiny /srv/shiny-server
 USER shiny
 EXPOSE 3838
 CMD ["/usr/bin/shiny-server.sh"]
+
+#something like this needed for heroku
+#ENV PORT=3838
+#CMD ["R", "-e", "shiny::runApp('/srv/shiny-server/')"]
+
